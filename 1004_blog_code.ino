@@ -6,11 +6,11 @@ int capdac =2;
 double  dist = 0;
 double area = 0.0157;
 const double avg = 15;
-const double ofs = 0.4;
+ double ofs = 0.4;
 double dev = 5;
-double fct = 0.5;
+float fct = 0.5;
 
-double *fct_ptr = &fct;
+
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
@@ -20,26 +20,50 @@ void setup() {
 
   Configure_meas();
   Trigger_Meas();
-
+  delay(1000);
+  while(!autoCal(50.0,dev));
+ 
+ 
+ 
+  
 }
 bool autoCal(double target,double deviation)
 {
- double current = measure();
- double mod = current;
- while((mod>(target+deviation)||(mod<(target-deviation)) //current reading outside acceptable deviation
+
+ double mod = measure();
+ delayMicroseconds(10);
+ do{
+    double mod = measure();
+  delayMicroseconds(10);
+
+Serial.print("calibrating");
+ if(mod<target) //if current reading is more than 10x the target range, increase the factor to reduce the range
  {
- if(mod>(10*target)) //if current reading is more than 10x the target range, increase the factor to reduce the range
- {
-  *fct_ptr +=.01;
-  mod = measure();
+  fct +=0.1;
+ //Serial.print(fct);
+  //Serial.println("incrementing");
+ //double mod = measure();
+    delayMicroseconds(4);
+  printDouble(fct, 100000);
+  
  }
- if(mod>(10*target)) //if current reading is less than  the target range, decrease the factor to reduce the range
+ if(mod>(target)) //if current reading is less than  the target range, decrease the factor to reduce the range
  {
-  *fct -=.01;
-  mod = measure();
+  fct -=0.01;
+  //  Serial.print(fct);
+  //Serial.println("decrementing");
+ double mod = measure();
+  delayMicroseconds(4);
+    printDouble(fct, 100000);
+  
+
+
  }
-}
-return true;
+
+
+}while((mod>(target+deviation))||(mod<(target-deviation))); //current reading outside acceptable deviation
+
+ return true;
 }
 void printDouble( double val, unsigned int precision) {
   // prints val with number of decimal places determine by precision
@@ -132,7 +156,7 @@ void Trigger_Meas()
   //trigger measurment
   int measurement = 0;
   uint16_t trigger_data = 0;
-  uint16_t rate = 0x01;
+  uint16_t rate = 0x04;
   trigger_data = ((uint16_t)rate) << 10; // sample rate
   trigger_data |= 1 << 8; //repeat disabled
   trigger_data |= (1 << (7 - measurement));
@@ -213,6 +237,7 @@ float read_val()
 
 
 void loop() {
+ //Serial.print("mainloop");
   unsigned long StartTime = millis();
  
  dist = measure();
