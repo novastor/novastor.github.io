@@ -10,7 +10,7 @@ const double ofs = 0.4;
 double dev = 5;
 double fct = 0.5;
 
-int *fct_ptr; 
+double *fct_ptr = &fct;
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
@@ -30,7 +30,7 @@ bool autoCal(double target,double deviation)
  {
  if(mod>(10*target)) //if current reading is more than 10x the target range, increase the factor to reduce the range
  {
-  *fct +=.01;
+  *fct_ptr +=.01;
   mod = measure();
  }
  if(mod>(10*target)) //if current reading is less than  the target range, decrease the factor to reduce the range
