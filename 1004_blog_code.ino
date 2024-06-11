@@ -6,10 +6,11 @@ int capdac =2;
 double  dist = 0;
 double area = 0.0157;
 const double avg = 15;
-double ofs = 0.4;
+const double ofs = 0.4;
+double dev = 5;
 double fct = 0.5;
-int *ofs_ptr;
-int *fct_ptr;
+
+int *fct_ptr; 
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
@@ -21,7 +22,25 @@ void setup() {
   Trigger_Meas();
 
 }
-
+bool autoCal(double target,double deviation)
+{
+ double current = measure();
+ double mod = current;
+ while((mod>(target+deviation)||(mod<(target-deviation)) //current reading outside acceptable deviation
+ {
+ if(mod>(10*target)) //if current reading is more than 10x the target range, increase the factor to reduce the range
+ {
+  *fct +=.01;
+  mod = measure();
+ }
+ if(mod>(10*target)) //if current reading is less than  the target range, decrease the factor to reduce the range
+ {
+  *fct -=.01;
+  mod = measure();
+ }
+}
+return true;
+}
 void printDouble( double val, unsigned int precision) {
   // prints val with number of decimal places determine by precision
   // NOTE: precision is 1 followed by the number of zeros for the desired number of decimial places
@@ -79,7 +98,7 @@ double measure()
   //sum = (sum*1.8)-.435;
  // sum-=0.435;
 //  sum = (sum)*1E-12;
-  dist = ((8.854) * 1.0005 * area)/((sum*0.5)-.433) *10 ; //distance in cm
+  dist = ((8.854) * 1.0005 * area)/((sum*fct)-ofs) *10 ; //distance in cm
 //  if(dist<target)
 //  {
 //    
